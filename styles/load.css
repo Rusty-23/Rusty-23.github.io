@@ -75,3 +75,15 @@ p{
     font-weight: bolder;
     font-size: 5rem;
 }
+@media screen and (max-width: 720px) {
+   .logo-name {
+     font-size: 14px;
+   }
+  #svg {
+    height: 120px;
+    width: 120px;
+  }
+  p{
+    font-size: 2rem;
+  }
+}
