@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vending Machine - Admin</title>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js"></script>
+    <script src="firebaseConfig.js"></script>
+    <script src="auth.js"></script>
+</head>
+<body>
+    <nav>
+        <div class="logo">Vending Machine</div>
+        <div class="nav-links">
+            <button onclick="logout()">Logout</button>
+        </div>
+    </nav>
+    <main>
+        <h1>Pending Requests</h1>
+        <table id="requests-table">
+            <thead>
+                <tr>
+                    <th>User</th>
+                    <th>Documents</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Requests will be populated here -->
+            </tbody>
+        </table>
+    </main>
+    <script>
+        const loadRequests = async () => {
+            const querySnapshot = await db.collection('requests').orderBy('timestamp').get();
+            const tableBody = document.getElementById('requests-table').getElementsByTagName('tbody')[0];
+            tableBody.innerHTML = '';
+            querySnapshot.forEach((doc) => {
+                const request = doc.data();
+                const row = tableBody.insertRow();
+                row.insertCell(0).innerText = request.user;
+                row.insertCell(1).innerText = request.documents.join(', ');
+                row.insertCell(2).innerText = request.status;
+                const actionsCell = row.insertCell(3);
+                if (request.status === 'pending') {
+                    const confirmButton = document.createElement('button');
+                    confirmButton.innerText = 'Confirm';
+                    confirmButton.onclick = () => confirmRequest(doc.id);
+                    actionsCell.appendChild(confirmButton);
+                    const removeButton = document.createElement('button');
+                    removeButton.innerText = 'Remove';
+                    removeButton.onclick = () => removeRequest(doc.id);
+                    actionsCell.appendChild(removeButton);
+                }
+            });
+        };
+
+        const confirmRequest = async (id) => {
+            const pdfFile = prompt('Please upload the PDF file URL for the document:');
+            if (!pdfFile) return;
+            await db.collection('requests').doc(id).update({
+                status: 'confirmed',
+                pdfFile: pdfFile
+            });
+            loadRequests();
+        };
+
+        const removeRequest = async (id) => {
+            await db.collection('requests').doc(id).delete();
+            loadRequests();
+        };
+
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                loadRequests();
+            } else {
+                window.location.href = 'index.html';
+            }
+        });
+    </script>
+</body>
+</html>

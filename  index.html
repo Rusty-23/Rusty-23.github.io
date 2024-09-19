@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vending Machine - User</title>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js"></script>
+    <script src="firebaseConfig.js"></script>
+    <script src="auth.js"></script>
+</head>
+<body>
+    <nav>
+        <div class="logo">Vending Machine</div>
+        <div class="nav-links">
+            <button onclick="logout()">Logout</button>
+        </div>
+    </nav>
+    <main>
+        <h1>Request Documents</h1>
+        <form id="request-form">
+            <label>
+                <input type="checkbox" name="document" value="COG"> Certificate of Grades (COG)
+            </label>
+            <label>
+                <input type="checkbox" name="document" value="COR"> Certificate of Registration (COR)
+            </label>
+            <button type="submit">Submit</button>
+        </form>
+    </main>
+    <script>
+        document.getElementById('request-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const user = auth.currentUser;
+            if (!user) {
+                alert('Please log in first.');
+                return;
+            }
+            const selectedDocuments = Array.from(document.querySelectorAll('input[name="document"]:checked')).map(el => el.value);
+            if (selectedDocuments.length === 0) {
+                alert('Please select at least one document.');
+                return;
+            }
+            try {
+                await db.collection('requests').add({
+                    user: user.email,
+                    documents: selectedDocuments,
+                    status: 'pending',
+                    timestamp: new Date()
+                });
+                alert('Request submitted successfully.');
+            } catch (error) {
+                console.error('Error submitting request:', error);
+                alert('Error submitting request. Please try again.');
+            }
+        });
+    </script>
+</body>
+</html>
